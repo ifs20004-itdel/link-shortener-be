@@ -1,6 +1,15 @@
 services:
+  springboot-app:
+    container_name: link-shortener-api
+    image: springboot-app
+    build:
+      context: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - redis
   redis:
     container_name: redis
     image: redis:7
     ports:
-      - 6379:6379
+      - "6379:6379"

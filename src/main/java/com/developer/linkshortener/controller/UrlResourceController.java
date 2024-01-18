@@ -13,6 +13,7 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import org.apache.commons.validator.UrlValidator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -35,6 +36,9 @@ public class UrlResourceController {
 
     @Autowired
     StringRedisTemplate redisTemplate;
+
+    @Value("${base.url}")
+    private String baseUrl;
 
     // Not used
     @GetMapping("/links")
@@ -67,7 +71,7 @@ public class UrlResourceController {
     // Used
     @GetMapping("/qr-code/{id}")
     public ResponseEntity<Object> generateQRCode( @PathVariable String id){
-        String key = "http:localhost:8080/"+id;
+        String key = baseUrl+id;
 
         byte[] image;
         try{
@@ -85,7 +89,7 @@ public class UrlResourceController {
     @GetMapping ("/qr-code/download/{id}")
             public ResponseEntity<Object> downloadQRCode(@PathVariable String id) throws WriterException {
 
-                String key = "http:localhost:8080/"+id;
+                String key = baseUrl+id;
                 QRCodeWriter qrCodeWriter = new QRCodeWriter();
                 BitMatrix bitMatrix = qrCodeWriter.encode(key, BarcodeFormat.QR_CODE, Constant.SIZE, Constant.SIZE);
                 try{
@@ -124,13 +128,13 @@ public class UrlResourceController {
                     return ResponseHandler.responseBuilder(HttpStatus.CONFLICT,true, MessageConstant.ENTITY_EXIST, msg);
                 }
                 redisTemplate.opsForValue().set(formData.getTitle().get(),formData.getUrl(), 1, TimeUnit.DAYS);
-                String newUrl = "http://localhost:8080/"+formData.getTitle().get();
+                String newUrl = baseUrl+formData.getTitle().get();
                 msg.put("url",newUrl);
                 return ResponseHandler.responseBuilder(HttpStatus.CREATED, false, MessageConstant.SHORTEN_SUCCESS,msg);
             }
             String id = Hashing.murmur3_32().hashString(formData.getUrl(), StandardCharsets.UTF_8).toString();
             redisTemplate.opsForValue().set(id,formData.getUrl(),1, TimeUnit.DAYS);
-            String newUrl = "http://localhost:8080/"+id;
+            String newUrl = baseUrl+id;
             msg.put("url",newUrl);
             return ResponseHandler.responseBuilder(HttpStatus.CREATED,false,MessageConstant.SHORTEN_SUCCESS,msg);
         }
@@ -152,7 +156,7 @@ public class UrlResourceController {
         }
         redisTemplate.rename(oldKey, newKey.getUrl());
 
-        String newShortenUrl = "http://localhost:8080/"+newKey.getUrl();
+        String newShortenUrl = baseUrl+newKey.getUrl();
         msg.put("url",newShortenUrl);
         return ResponseHandler.responseBuilder(HttpStatus.CREATED,false,MessageConstant.EDIT_SUCCESS,msg);
     }
