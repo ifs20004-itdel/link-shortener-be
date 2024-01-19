@@ -3,30 +3,8 @@ name: Docker Publish
 on:
   push:
     branches:
-      - main
+      - "main"
 
 jobs:
-  build-and-publish:
+  build:
     runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v2
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Build and push Docker image
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-        run: |
-          docker buildx create --use
-          docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD ghcr.io
-          docker buildx build \
-            --platform linux/amd64,linux/arm64 \
-            -t ghcr.io/ifs20004/redis:latest \
-            -t ghcr.io/ifs20004/springboot-app:latest \
-            .
-
-          docker push ghcr.io/ifs20004/redis:latest
